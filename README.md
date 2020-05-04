@@ -6,3 +6,5 @@ Functions to-do:
 - allow users to register their Kattis username
 - assign roles to users based on rank
 - something about clearing channels
+- new logo every day
+- show kattis scores in pinned message - update regularly
