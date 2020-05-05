@@ -8,3 +8,6 @@ Functions to-do:
 - something about clearing channels
 - new logo every day
 - show kattis scores in pinned message - update regularly
+
+
+To add functionality, just extend DiscordClient and put your file in /modules.
