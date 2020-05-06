@@ -33,12 +33,12 @@ class Account:
         """Fetch and update the user's Kattis score."""
         profile_url = 'https://open.kattis.com/users/{}'.format(self.kattis_name)
         # the xpath was determined manually through devtools, it might change in the future
-        score_xpath = '/html/body/div[1]/div/div[1]/section/div/div/div[2]/div/table/tbody/tr[2]/td[2]'
+        score_xpath = '/html/body/div[1]/div/div[1]/section/div/div/div[2]/div/table/tr[2]/td[2]'
         response = requests.get(profile_url)
-        print('response', response.text)
         tree = lxml.html.fromstring(response.text)
-        score = tree.xpath(score_xpath)
-        print('score', score)
+        score_element = tree.xpath(score_xpath)[0]
+        score = float(score_element.text)
+        self.score = score
 
     @property
     def discord_id(self):
@@ -97,9 +97,13 @@ class Account:
         return [Account(d[0], d[1], d[2], d[3], insert=False) for d in result]
 
     @staticmethod
-    def filter(discord_name: str = None, kattis_name: str = None) -> List['Account']:
+    def filter(discord_id: int = None, discord_name: str = None, kattis_name: str = None) -> List['Account']:
         """Return accounts filtered by Discord username or Kattis username."""
-        if discord_name:
+        if discord_id:
+            result = Account._exec(
+                'SELECT discord_id, discord_name, kattis_name, score FROM account WHERE discord_id=?',
+                discord_id)
+        elif discord_name:
             result = Account._exec(
                 'SELECT discord_id, discord_name, kattis_name, score FROM account WHERE discord_name=?',
                 discord_name)
@@ -108,17 +112,17 @@ class Account:
                 'SELECT discord_id, discord_name, kattis_name, score FROM account WHERE kattis_name=?',
                 kattis_name)
         else:
-            raise ValueError('Must provide Discord name or Kattis name.')
+            raise ValueError('Must provide Discord id, Discord name, or Kattis name.')
         return [Account(d[0], d[1], d[2], d[3], insert=False) for d in result]
 
     @staticmethod
-    def get(discord_name: str = None, kattis_name: str = None) -> 'Account':
+    def get(discord_id: int = None, discord_name: str = None, kattis_name: str = None) -> 'Account':
         """
         Return a single account, filtered by Discord username or Kattis username.
 
         :raise ValueError if there are multiple accounts or no accounts that match the filter.
         """
-        result = Account.filter(discord_name=discord_name, kattis_name=kattis_name)
+        result = Account.filter(discord_id=discord_id, discord_name=discord_name, kattis_name=kattis_name)
         if len(result) != 1:
             raise ValueError('{} results found', len(result))
         return result[0]
@@ -140,7 +144,7 @@ class AccountHandler(DiscordClient):
                 print('id', message.author.id)
                 await message.channel.send(
                     'Linked {} to Kattis account **{}**, score: {}'.format(message.author.mention, kattis_name,
-                                                                          account.score))
+                                                                           account.score))
         elif message.content.startswith('/list'):
             accounts = Account.all()
             print('accounts', accounts)
@@ -148,4 +152,15 @@ class AccountHandler(DiscordClient):
                              accounts]
             table = tabulate(accounts_list, headers=['User', 'Kattis Username', 'Score', 'Rank'], tablefmt='fancy_grid')
             await message.channel.send('```{}```'.format(table))
+        elif message.content.startswith('/refresh'):
+            try:
+                account = Account.get(discord_id=message.author.id)
+            except ValueError:
+                await message.channel.send(
+                    'No Kattis username linked for {}! Do `/link <kattis username>`'.format(message.author.mention))
+            else:
+                account.refresh()
+                await message.channel.send(
+                    'Kattis account {} linked to {} refreshed. Score: {}'.format(account.kattis_name,
+                                                                                 message.author.mention, account.score))
         print('Message from {0.author}: {0.content}'.format(message))
