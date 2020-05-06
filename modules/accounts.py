@@ -102,15 +102,15 @@ class Account:
         if discord_id:
             result = Account._exec(
                 'SELECT discord_id, discord_name, kattis_name, score FROM account WHERE discord_id=?',
-                discord_id)
+                (discord_id,))
         elif discord_name:
             result = Account._exec(
                 'SELECT discord_id, discord_name, kattis_name, score FROM account WHERE discord_name=?',
-                discord_name)
+                (discord_name,))
         elif kattis_name:
             result = Account._exec(
                 'SELECT discord_id, discord_name, kattis_name, score FROM account WHERE kattis_name=?',
-                kattis_name)
+                (kattis_name,))
         else:
             raise ValueError('Must provide Discord id, Discord name, or Kattis name.')
         return [Account(d[0], d[1], d[2], d[3], insert=False) for d in result]
@@ -141,26 +141,25 @@ class AccountHandler(DiscordClient):
                 await message.channel.send('Usage: /link <your Kattis username>')
             else:
                 account = Account(message.author.id, str(message.author), kattis_name, refresh=True)
-                print('id', message.author.id)
                 await message.channel.send(
                     'Linked {} to Kattis account **{}**, score: {}'.format(message.author.mention, kattis_name,
                                                                            account.score))
         elif message.content.startswith('/list'):
             accounts = Account.all()
-            print('accounts', accounts)
             accounts_list = [(self.get_user(a.discord_id).display_name, a.kattis_name, a.score, a.rank) for a in
                              accounts]
             table = tabulate(accounts_list, headers=['User', 'Kattis Username', 'Score', 'Rank'], tablefmt='fancy_grid')
             await message.channel.send('```{}```'.format(table))
         elif message.content.startswith('/refresh'):
             try:
+                print('id type', type(message.author.id))
                 account = Account.get(discord_id=message.author.id)
-            except ValueError:
+            except ReferenceError:
                 await message.channel.send(
                     'No Kattis username linked for {}! Do `/link <kattis username>`'.format(message.author.mention))
             else:
                 account.refresh()
                 await message.channel.send(
-                    'Kattis account {} linked to {} refreshed. Score: {}'.format(account.kattis_name,
+                    'Kattis account **{}** linked to {} refreshed. Score: {}'.format(account.kattis_name,
                                                                                  message.author.mention, account.score))
-        print('Message from {0.author}: {0.content}'.format(message))
+        print('Message from {0.author} ({0.author.id}): {0.content}'.format(message))
