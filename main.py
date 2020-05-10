@@ -4,11 +4,10 @@ from discord.ext.commands import Bot, Command
 import importlib
 
 # add the filename of your module here
-MODULES = [
-    'accounts'
-]
+MODULES = ["accounts", "misc"]
 
-bot = Bot(command_prefix='!')
+bot = Bot(command_prefix="!")
+
 
 
 def main():
@@ -16,24 +15,27 @@ def main():
     # get bot token
     token = None
     try:
-        with open('token.txt') as f:
+        with open("token.txt") as f:
             token = f.read()
     except FileNotFoundError:
-        Path('token.txt').touch()
+        Path("token.txt").touch()
     finally:
         if not token:
-            print('Error: Put a Discord token in token.txt', file=sys.stderr)
+            print("Error: Put a Discord token in token.txt", file=sys.stderr)
             return
     # import bot extensions
     commands = []
     for module in MODULES:
-        m = importlib.import_module('modules.' + module, '.')
-        commands += [v for k,v in m.__dict__.items() if type(v) == Command]
+        m = importlib.import_module("modules." + module, ".")
+        commands += [v for k, v in m.__dict__.items() if type(v) == Command]
     for command in commands:
         bot.add_command(command)
     # start bot
     bot.run(token)
 
+@bot.event
+async def on_ready():
+    print("We have logged in as {0.user}".format(bot))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

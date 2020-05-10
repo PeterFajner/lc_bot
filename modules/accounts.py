@@ -7,6 +7,8 @@ from tabulate import tabulate
 from ranks import RANKS
 import requests, lxml.html
 from main import bot
+from discord.ext import commands
+
 
 
 class Account:
@@ -128,7 +130,7 @@ class Account:
         return result[0]
 
 
-@bot.command()
+@commands.command()
 async def link(ctx, kattis_username: str):
     account = Account(ctx.author.id, str(ctx.author), kattis_username, refresh=True)
     await ctx.send(
@@ -136,7 +138,7 @@ async def link(ctx, kattis_username: str):
                                                                account.score))
 
 
-@bot.command()
+@commands.command()
 async def list(ctx):
     accounts = Account.all()
     accounts_list = [(a.discord_name, a.kattis_name, a.score, a.rank) for a in
@@ -145,7 +147,7 @@ async def list(ctx):
     await ctx.send('```{}```'.format(table))
 
 
-@bot.command()
+@commands.command()
 async def refresh(ctx):
     try:
         print('id type', type(ctx.author.id))
