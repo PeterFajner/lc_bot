@@ -1,12 +1,12 @@
 from typing import List, Tuple
 
-from superclasses import DiscordClient
 import sqlite3
 
 import discord
 from tabulate import tabulate
 from ranks import RANKS
-import requests, lxml.html, cssselect
+import requests, lxml.html
+from main import bot
 
 
 class Account:
@@ -128,38 +128,33 @@ class Account:
         return result[0]
 
 
-class AccountHandler(DiscordClient):
-    async def on_ready(self):
-        print('Account service enabled, logged on as {0}!'.format(self.user))
+@bot.command()
+async def link(ctx, kattis_username: str):
+    account = Account(ctx.author.id, str(ctx.author), kattis_username, refresh=True)
+    await ctx.send(
+        'Linked {} to Kattis account **{}**, score: {}'.format(ctx.author.mention, kattis_username,
+                                                               account.score))
 
-    # noinspection PyMethodMayBeStatic
-    async def on_message(self, message: discord.Message):
-        if message.content.startswith('/link'):
-            try:
-                command, kattis_name = message.content.split(' ')
-            except ValueError:
-                await message.channel.send('Usage: /link <your Kattis username>')
-            else:
-                account = Account(message.author.id, str(message.author), kattis_name, refresh=True)
-                await message.channel.send(
-                    'Linked {} to Kattis account **{}**, score: {}'.format(message.author.mention, kattis_name,
-                                                                           account.score))
-        elif message.content.startswith('/list'):
-            accounts = Account.all()
-            accounts_list = [(self.get_user(a.discord_id).display_name, a.kattis_name, a.score, a.rank) for a in
-                             accounts]
-            table = tabulate(accounts_list, headers=['User', 'Kattis Username', 'Score', 'Rank'], tablefmt='fancy_grid')
-            await message.channel.send('```{}```'.format(table))
-        elif message.content.startswith('/refresh'):
-            try:
-                print('id type', type(message.author.id))
-                account = Account.get(discord_id=message.author.id)
-            except ReferenceError:
-                await message.channel.send(
-                    'No Kattis username linked for {}! Do `/link <kattis username>`'.format(message.author.mention))
-            else:
-                account.refresh()
-                await message.channel.send(
-                    'Kattis account **{}** linked to {} refreshed. Score: {}'.format(account.kattis_name,
-                                                                                 message.author.mention, account.score))
-        print('Message from {0.author} ({0.author.id}): {0.content}'.format(message))
+
+@bot.command()
+async def list(ctx):
+    accounts = Account.all()
+    accounts_list = [(a.discord_name, a.kattis_name, a.score, a.rank) for a in
+                     accounts]
+    table = tabulate(accounts_list, headers=['User', 'Kattis Username', 'Score', 'Rank'], tablefmt='fancy_grid')
+    await ctx.send('```{}```'.format(table))
+
+
+@bot.command()
+async def refresh(ctx):
+    try:
+        print('id type', type(ctx.author.id))
+        account = Account.get(discord_id=ctx.author.id)
+    except ReferenceError:
+        await ctx.send(
+            'No Kattis username linked for {}! Do `/link <kattis username>`'.format(ctx.author.mention))
+    else:
+        account.refresh()
+        await ctx.channel.send(
+            'Kattis account **{}** linked to {} refreshed. Score: {}'.format(account.kattis_name,
+                                                                             ctx.author.mention, account.score))
