@@ -4,7 +4,7 @@ from discord import Role, Guild
 from datetime import datetime
 from main import bot
 
-    
+
 def is_ta(message) -> bool:
     """check if who sent a message is a TA, 
     userful for purge messages as only TA's should be able to purge """
@@ -44,9 +44,15 @@ async def active(ctx):
     """
     on_duty = ctx.guild.get_role(role_id=689482996356612166)
     if is_ta(ctx):
-        await ctx.send("you work here dude, ill give you a role now")
+        embed = discord.Embed(
+            title="Learning Centre Administration",
+            description="Hi {}, I have given you the <@&689482996356612166> role".format(
+                ctx.author.nick
+            ),
+            color=0xF10D0D,
+        )
         await ctx.author.add_roles(on_duty)
-        await ctx.send("I have given you the @ON DUTY role")
+        await ctx.send(embed=embed)
     else:
         await ctx.send("Hi, you do not work here")
 
@@ -56,9 +62,14 @@ async def unactive(ctx):
     """Opposite of active"""
     on_duty = ctx.guild.get_role(role_id=689482996356612166)
     if is_ta(ctx):
-        await ctx.send("Nice work dude,taking your role away")
+        embed = discord.Embed(
+            title="Learning Centre Administration",
+            description="Hi {}, I have removed the <@&689482996356612166> role".format(
+                ctx.author.nick
+            ),
+            color=0xF10D0D)   
         await ctx.author.remove_roles(on_duty)
-        await ctx.send("I have taken your role away, Ganbate")
+        await ctx.send(embed=embed)
     else:
         await ctx.send("Hi, you do not work here")
 

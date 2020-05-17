@@ -171,8 +171,8 @@ async def link(ctx, args: str):
     tmp_message = "Linked {} to Kattis account **{}**, score: {}".format(
         ctx.author.mention, args, account.score
     )
-    message = Embed(title="Kattis Integration", description=tmp_message, color=0x0D2164,)
-    await ctx.send(embed=message)
+    txt = Embed(title="Kattis Integration", description=tmp_message, color=0x0D2164,)
+    await ctx.send(embed=txt)
 
 
 @commands.command()
