@@ -4,7 +4,7 @@ from discord.ext.commands import Bot, Command
 import importlib
 
 # add the filename of your module here
-MODULES = ["accounts", "misc"]
+MODULES = ["accounts", "misc", "embeds"]
 
 bot = Bot(command_prefix="!")
 
