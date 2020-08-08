@@ -47,7 +47,7 @@ async def active(ctx):
         embed = discord.Embed(
             title="Learning Centre Administration",
             description="Hi {}, I have given you the <@&689482996356612166> role".format(
-                ctx.author.nick
+                ctx.author.nick or ctx.author.name
             ),
             color=0xF10D0D,
         )
@@ -65,7 +65,7 @@ async def unactive(ctx):
         embed = discord.Embed(
             title="Learning Centre Administration",
             description="Hi {}, I have removed the <@&689482996356612166> role".format(
-                ctx.author.nick
+                ctx.author.nick or ctx.author.name
             ),
             color=0xF10D0D)   
         await ctx.author.remove_roles(on_duty)
